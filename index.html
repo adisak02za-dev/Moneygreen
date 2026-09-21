@@ -1009,6 +1009,29 @@ document.addEventListener('change',e=>{
   const th=store.get(TKEY);
   if(th==='dark'||th==['light'])document.documentElement.dataset.theme=th;
   render();
+})(); /* ===== รับค่าจาก Shortcut / วิดเจ็ต =====
+   https://.../Moneygreen/?add=85           → บวก 85 เข้าวันนี้
+   https://.../Moneygreen/?add=85&date=2026-09-22  → ระบุวันเอง
+   https://.../Moneygreen/?tab=log          → เปิดหน้าบันทึกเลย     */
+(function fromURL(){
+  const q = new URLSearchParams(location.search);
+  const tab = q.get('tab');
+  if(tab && VIEWS[tab]) ui.tab = tab;
+
+  const amt = toInt(q.get('add'));
+  if(amt != null && amt > 0){
+    let d = q.get('date') || TODAY;
+    if(d < S.startDate) d = S.startDate;
+    if(d > M.planEnd)   d = M.planEnd;
+    S.actuals[d] = (S.actuals[d] || 0) + amt;
+    ui.logDate = d;
+    commit();                                   // เซฟ + คำนวณใหม่ + วาดจอ
+    toast('บวกเพิ่ม ' + baht(amt) + ' วันที่ ' + dShort(d) + ' รวมเป็น ' + baht(S.actuals[d]));
+  } else if(tab){
+    render();
+  }
+  // ล้าง URL กันบวกซ้ำตอนรีเฟรช
+  if(location.search) history.replaceState(null, '', location.pathname);
 })();
 </script>
 </body>
